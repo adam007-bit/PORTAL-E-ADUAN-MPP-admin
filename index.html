@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal Admin e-Aduan</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #eef2f7; margin: 0; padding: 0; }
+    header { background: #800000; color: white; padding: 15px; text-align: center; }
+    .container { max-width: 900px; margin: 30px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    th { background: #800000; color: white; }
+    select { padding: 6px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Portal Admin e-Aduan</h1>
+  </header>
+
+  <div class="container">
+    <h3>Senarai Aduan</h3>
+    <table id="aduanTable">
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Kelas</th>
+          <th>Aduan</th>
+          <th>Masa</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    function loadAduan(){
+      let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
+      const tbody = document.querySelector("#aduanTable tbody");
+      tbody.innerHTML = "";
+
+      senarai.forEach((item, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${item.nama}</td>
+          <td>${item.kelas}</td>
+          <td>${item.aduan}</td>
+          <td>${item.masa}</td>
+          <td>
+            <select onchange="updateStatus(${index}, this.value)">
+              <option value="Dalam Proses" ${item.status==="Dalam Proses"?"selected":""}>Dalam Proses</option>
+              <option value="Selesai" ${item.status==="Selesai"?"selected":""}>Selesai</option>
+              <option value="Ditolak" ${item.status==="Ditolak"?"selected":""}>Ditolak</option>
+            </select>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateStatus(index, status){
+      let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
+      senarai[index].status = status;
+      localStorage.setItem("aduanPelajar", JSON.stringify(senarai));
+      loadAduan();
+    }
+
+    loadAduan();
+  </script>
+</body>
+</html>
