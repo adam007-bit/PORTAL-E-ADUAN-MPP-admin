@@ -35,6 +35,7 @@
   </div>
 
   <script>
+    // Load data dari localStorage
     function loadAduan(){
       let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
       const tbody = document.querySelector("#aduanTable tbody");
@@ -61,14 +62,20 @@
       });
     }
 
+    // Update status dalam localStorage
     function updateStatus(index, status){
       let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
       senarai[index].status = status;
       localStorage.setItem("aduanPelajar", JSON.stringify(senarai));
-      loadAduan();
+      loadAduan(); // refresh table
     }
 
+    // Mula-mula load data
     loadAduan();
+
+    // Auto reload setiap 5s untuk sync bila buka tab lain
+    setInterval(loadAduan, 5000);
   </script>
 </body>
 </html>
+
