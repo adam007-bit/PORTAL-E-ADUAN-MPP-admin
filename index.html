@@ -2,112 +2,129 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Admin e-Aduan</title>
+  <title>Portal Admin Aduan - SEMSIRA</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #eef2f7; }
-    header { background: #222; color: #fff; padding: 15px; text-align: center; }
-    footer { background: #444; color: #fff; text-align: center; padding: 10px; margin-top: 20px; }
-    .container { max-width: 1000px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #222; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
-    th { background: #333; color: white; }
-    select, button { padding: 6px; border-radius: 4px; cursor: pointer; }
-    button { background: red; color: white; border: none; }
-    button:hover { background: darkred; }
-    .status-proses { color: #b58900; font-weight: bold; }
-    .status-selesai { color: green; font-weight: bold; }
-    .status-ditolak { color: red; font-weight: bold; }
-    .stats { display: flex; justify-content: space-around; margin-top: 20px; }
-    .card { background: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; width: 30%; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .card h3 { margin: 0; font-size: 24px; }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f6f9; transition: background 0.3s, color 0.3s; }
+    header { background:#800000; color:#fff; padding:15px; display:flex; align-items:center; justify-content:space-between; }
+    header img { height:60px; margin-right:15px; }
+    header h1 { margin:0; font-size:22px; }
+    .container { max-width:1000px; margin:20px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    table { width:100%; border-collapse: collapse; margin-top:20px; }
+    th, td { border:1px solid #ddd; padding:10px; text-align:left; }
+    th { background:#800000; color:#fff; }
+    button { padding:6px 10px; margin:2px; border:none; border-radius:4px; cursor:pointer; }
+    .selesai { background:#28a745; color:white; }
+    .proses { background:#ffc107; color:black; }
+    .ditolak { background:#dc3545; color:white; }
+    .delete { background:#6c757d; color:white; }
+    .dark-mode { background:#1e1e1e; color:#e0e0e0; }
+    .dark-mode header { background:#111; }
+    .dark-mode .container { background:#2c2c2c; color:#e0e0e0; }
   </style>
 </head>
 <body>
+  <header>
+    <div style="display:flex; align-items:center;">
+      <img src="logo.png" alt="Logo Sekolah">
+      <h1>Portal Admin Aduan - SEMSIRA</h1>
+    </div>
+    <div>
+      <input type="text" id="searchBar" placeholder="Cari aduan...">
+      <select id="filterStatus" onchange="loadAduan()">
+        <option value="">Semua</option>
+        <option value="Dalam Proses">Dalam Proses</option>
+        <option value="Selesai">Selesai</option>
+        <option value="Ditolak">Ditolak</option>
+      </select>
+      <button onclick="exportCSV()">📥 Export CSV</button>
+      <button onclick="toggleDarkMode()">🌙</button>
+    </div>
+  </header>
 
-<header>
-  <h1>Portal Admin e-Aduan</h1>
-</header>
-
-<div class="container">
-  <h2>Dashboard Aduan</h2>
-
-  <div class="stats">
-    <div class="card"><h3 id="total">0</h3><p>Jumlah Aduan</p></div>
-    <div class="card"><h3 id="proses">0</h3><p>Dalam Proses</p></div>
-    <div class="card"><h3 id="selesai">0</h3><p>Selesai</p></div>
+  <div class="container">
+    <h2>Senarai Aduan</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nama</th>
+          <th>Aduan</th>
+          <th>Status</th>
+          <th>Tarikh</th>
+          <th>Tindakan</th>
+        </tr>
+      </thead>
+      <tbody id="aduanTable"></tbody>
+    </table>
   </div>
 
-  <table id="adminTable">
-    <thead>
-      <tr>
-        <th>ID Aduan</th>
-        <th>Nama</th>
-        <th>Aduan</th>
-        <th>Status</th>
-        <th>Tindakan</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<footer>
-  &copy; 2025 e-Aduan F6 | Panel Admin
-</footer>
-
-<script>
-  let aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
-
-  function renderAdminTable() {
-    const tbody = document.querySelector("#adminTable tbody");
-    tbody.innerHTML = "";
-    let proses = 0, selesai = 0;
-
-    aduanList.forEach((a, index) => {
-      if(a.status === "Dalam Proses") proses++;
-      if(a.status === "Selesai") selesai++;
-      let statusClass = a.status === "Dalam Proses" ? "status-proses" : 
-                        a.status === "Selesai" ? "status-selesai" : "status-ditolak";
-      tbody.innerHTML += `
-        <tr>
-          <td>${a.id}</td>
-          <td>${a.nama}</td>
-          <td>${a.aduan}</td>
-          <td>
-            <select onchange="updateStatus(${index}, this.value)" class="${statusClass}">
-              <option ${a.status==="Dalam Proses"?"selected":""}>Dalam Proses</option>
-              <option ${a.status==="Selesai"?"selected":""}>Selesai</option>
-              <option ${a.status==="Ditolak"?"selected":""}>Ditolak</option>
-            </select>
-          </td>
-          <td><button onclick="deleteAduan(${index})">Padam</button></td>
-        </tr>`;
-    });
-
-    document.getElementById("total").innerText = aduanList.length;
-    document.getElementById("proses").innerText = proses;
-    document.getElementById("selesai").innerText = selesai;
-  }
-
-  function updateStatus(index, newStatus) {
-    aduanList[index].status = newStatus;
-    localStorage.setItem("aduanList", JSON.stringify(aduanList));
-    renderAdminTable();
-  }
-
-  function deleteAduan(index) {
-    if(confirm("Adakah anda pasti mahu memadam aduan ini?")) {
-      aduanList.splice(index, 1);
-      localStorage.setItem("aduanList", JSON.stringify(aduanList));
-      renderAdminTable();
+  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
     }
-  }
 
-  renderAdminTable();
-</script>
+    function loadAduan(){
+      const aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
+      const search = document.getElementById("searchBar").value.toLowerCase();
+      const filter = document.getElementById("filterStatus").value;
+      const table = document.getElementById("aduanTable");
+      table.innerHTML = "";
 
+      aduanList
+        .filter(a => 
+          (!filter || a.status === filter) &&
+          (a.nama.toLowerCase().includes(search) || a.aduan.toLowerCase().includes(search) || a.id.toLowerCase().includes(search))
+        )
+        .forEach((a, i)=>{
+          table.innerHTML += `
+            <tr>
+              <td>${a.id}</td>
+              <td>${a.nama}</td>
+              <td>${a.aduan}</td>
+              <td>${a.status}</td>
+              <td>${a.masa}</td>
+              <td>
+                <button class="selesai" onclick="updateStatus(${i},'Selesai')">Selesai</button>
+                <button class="proses" onclick="updateStatus(${i},'Dalam Proses')">Proses</button>
+                <button class="ditolak" onclick="updateStatus(${i},'Ditolak')">Tolak</button>
+                <button class="delete" onclick="deleteAduan(${i})">Padam</button>
+              </td>
+            </tr>
+          `;
+        });
+    }
+
+    function updateStatus(index, status){
+      let aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
+      aduanList[index].status = status;
+      localStorage.setItem("aduanList", JSON.stringify(aduanList));
+      loadAduan();
+    }
+
+    function deleteAduan(index){
+      let aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
+      aduanList.splice(index,1);
+      localStorage.setItem("aduanList", JSON.stringify(aduanList));
+      loadAduan();
+    }
+
+    function exportCSV(){
+      const aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
+      let csv = "ID,Nama,Aduan,Status,Tarikh\n";
+      aduanList.forEach(a=>{
+        csv += `${a.id},"${a.nama}","${a.aduan}",${a.status},${a.masa}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "senarai_aduan.csv";
+      link.click();
+    }
+
+    document.getElementById("searchBar").addEventListener("input", loadAduan);
+    loadAduan();
+  </script>
 </body>
 </html>
+
 
