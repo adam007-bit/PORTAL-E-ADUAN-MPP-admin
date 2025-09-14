@@ -2,165 +2,117 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <title>Portal Admin Aduan SEMSIRA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal Admin - Aduan SEMSIRA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background:#f9f9f9; }
-    h1 { color:#333; }
-    table { width:100%; border-collapse:collapse; margin-top:20px; }
-    table, th, td { border:1px solid #ccc; }
-    th, td { padding:10px; text-align:left; }
-    button { cursor:pointer; padding:6px 12px; border:none; border-radius:4px; }
-    .btn-update { background:#ffc107; color:white; }
-    .btn-danger { background:#dc3545; color:white; }
-    .lang-btn { margin-right:5px; padding:6px 12px; }
-    .modal {
-      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5); justify-content:center; align-items:center;
-    }
-    .modal-content {
-      background:white; padding:20px; border-radius:8px; width:400px;
-    }
+    body { background:#f8f9fa; }
+    .card { border:none; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
+<div class="container py-5">
+  <h2 class="text-center mb-4">🛠️ Portal Admin SEMSIRA</h2>
 
-  <!-- Butang Bahasa -->
-  <div>
-    <button class="lang-btn" onclick="setLang('ms')">🇲🇾 BM</button>
-    <button class="lang-btn" onclick="setLang('zh')">🇨🇳 中文</button>
-    <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+  <!-- Carian -->
+  <input type="text" id="search" class="form-control mb-3" placeholder="Cari aduan...">
+
+  <!-- Jadual -->
+  <div class="card p-3">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th><th>Nama</th><th>Aduan</th><th>Status</th><th>Tarikh</th><th>Tindakan</th>
+        </tr>
+      </thead>
+      <tbody id="aduanTable"></tbody>
+    </table>
   </div>
+</div>
 
-  <h1 id="title"></h1>
-
-  <h2 id="senaraiAduan"></h2>
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th><th id="colNama"></th><th id="colAduan"></th>
-        <th id="colStatus"></th><th id="colTarikh"></th><th id="colTindakan"></th>
-      </tr>
-    </thead>
-    <tbody id="jadualAduan"></tbody>
-  </table>
-
-  <!-- Modal -->
-  <div class="modal" id="modalKemaskini">
+<!-- Modal Kemaskini -->
+<div class="modal fade" id="updateModal" tabindex="-1">
+  <div class="modal-dialog">
     <div class="modal-content">
-      <h3 id="modalTitle"></h3>
-      <p><b>ID:</b> <span id="detailID"></span></p>
-      <p><b id="lblNama"></b>: <span id="detailNama"></span></p>
-      <p><b id="lblAduan"></b>: <span id="detailAduan"></span></p>
-      <label id="lblStatus"></label>
-      <select id="detailStatus">
-        <option>Dalam Proses</option>
-        <option>Selesai</option>
-        <option>Ditolak</option>
-      </select>
-      <label id="lblNota"></label>
-      <textarea id="detailNota"></textarea>
-      <br>
-      <button class="btn-update" onclick="simpanKemaskini()" id="btnSimpan"></button>
-      <button class="btn-danger" onclick="padamAduan()" id="btnPadam"></button>
-      <button onclick="tutupModal()" id="btnTutup"></button>
+      <div class="modal-header"><h5 class="modal-title">Kemaskini Aduan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>ID:</strong> <span id="modalId"></span></p>
+        <p><strong>Nama:</strong> <span id="modalNama"></span></p>
+        <p><strong>Aduan:</strong> <span id="modalAduan"></span></p>
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select id="modalStatus" class="form-select">
+            <option>Dalam Proses</option>
+            <option>Selesai</option>
+            <option>Ditolak</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Nota Dalaman</label>
+          <textarea id="modalNota" class="form-control"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteAduan()">Padam</button>
+        <button class="btn btn-primary" onclick="saveUpdate()">Simpan</button>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    let lang = "ms";
-    let aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
-    let currentID = "";
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let aduanList = JSON.parse(localStorage.getItem("aduanList") || "[]");
+let selectedId = null;
 
-    const translations = {
-      ms: { title:"📋 Portal Admin Aduan SEMSIRA", senaraiAduan:"Senarai Aduan", 
-        colNama:"Nama", colAduan:"Aduan", colStatus:"Status", colTarikh:"Tarikh", colTindakan:"Tindakan",
-        modalTitle:"Kemaskini Aduan", lblNama:"Nama", lblAduan:"Aduan", lblStatus:"Status:", lblNota:"Nota Dalaman:",
-        btnSimpan:"Simpan", btnPadam:"Padam", btnTutup:"Tutup",
-        msgKemaskini:"✅ Aduan berjaya dikemaskini", msgPadam:"❌ Aduan dipadam"
-      },
-      zh: { title:"📋 管理员投诉门户", senaraiAduan:"投诉清单", 
-        colNama:"姓名", colAduan:"投诉", colStatus:"状态", colTarikh:"日期", colTindakan:"操作",
-        modalTitle:"更新投诉", lblNama:"姓名", lblAduan:"投诉", lblStatus:"状态:", lblNota:"内部备注:",
-        btnSimpan:"保存", btnPadam:"删除", btnTutup:"关闭",
-        msgKemaskini:"✅ 投诉已更新", msgPadam:"❌ 投诉已删除"
-      },
-      en: { title:"📋 Admin Complaint Portal", senaraiAduan:"Complaints List", 
-        colNama:"Name", colAduan:"Complaint", colStatus:"Status", colTarikh:"Date", colTindakan:"Action",
-        modalTitle:"Update Complaint", lblNama:"Name", lblAduan:"Complaint", lblStatus:"Status:", lblNota:"Internal Notes:",
-        btnSimpan:"Save", btnPadam:"Delete", btnTutup:"Close",
-        msgKemaskini:"✅ Complaint updated", msgPadam:"❌ Complaint deleted"
-      }
-    };
+function renderTable(){
+  const search=document.getElementById("search").value.toLowerCase();
+  const tbody=document.getElementById("aduanTable");
+  tbody.innerHTML="";
+  aduanList.filter(a=>a.nama.toLowerCase().includes(search)||a.aduan.toLowerCase().includes(search)||a.id.toLowerCase().includes(search))
+    .forEach(a=>{
+      tbody.innerHTML+=`<tr>
+        <td>${a.id}</td><td>${a.nama}</td><td>${a.aduan}</td><td>${a.status}</td><td>${a.tarikh}</td>
+        <td><button class="btn btn-sm btn-warning" onclick="openModal('${a.id}')">Kemaskini</button></td>
+      </tr>`;
+    });
+}
+renderTable();
+document.getElementById("search").addEventListener("input",renderTable);
 
-    function setLang(l) {
-      lang = l; const t = translations[lang];
-      document.getElementById("title").innerText = t.title;
-      document.getElementById("senaraiAduan").innerText = t.senaraiAduan;
-      document.getElementById("colNama").innerText = t.colNama;
-      document.getElementById("colAduan").innerText = t.colAduan;
-      document.getElementById("colStatus").innerText = t.colStatus;
-      document.getElementById("colTarikh").innerText = t.colTarikh;
-      document.getElementById("colTindakan").innerText = t.colTindakan;
-      document.getElementById("modalTitle").innerText = t.modalTitle;
-      document.getElementById("lblNama").innerText = t.lblNama;
-      document.getElementById("lblAduan").innerText = t.lblAduan;
-      document.getElementById("lblStatus").innerText = t.lblStatus;
-      document.getElementById("lblNota").innerText = t.lblNota;
-      document.getElementById("btnSimpan").innerText = t.btnSimpan;
-      document.getElementById("btnPadam").innerText = t.btnPadam;
-      document.getElementById("btnTutup").innerText = t.btnTutup;
-      paparJadual();
-    }
+function openModal(id){
+  const aduan=aduanList.find(a=>a.id===id);
+  selectedId=id;
+  document.getElementById("modalId").innerText=aduan.id;
+  document.getElementById("modalNama").innerText=aduan.nama;
+  document.getElementById("modalAduan").innerText=aduan.aduan;
+  document.getElementById("modalStatus").value=aduan.status;
+  document.getElementById("modalNota").value=aduan.nota;
+  new bootstrap.Modal(document.getElementById("updateModal")).show();
+}
 
-    function paparJadual() {
-      const t = translations[lang]; const tbody = document.getElementById("jadualAduan");
-      tbody.innerHTML = "";
-      aduanList.forEach(a=>{
-        tbody.innerHTML += `
-          <tr>
-            <td>${a.id}</td>
-            <td>${a.nama}</td>
-            <td>${a.teks}</td>
-            <td>${a.status}</td>
-            <td>${a.tarikh}</td>
-            <td><button class="btn-update" onclick="bukaModal('${a.id}')">${t.modalTitle}</button></td>
-          </tr>`;
-      });
-    }
+function saveUpdate(){
+  const idx=aduanList.findIndex(a=>a.id===selectedId);
+  aduanList[idx].status=document.getElementById("modalStatus").value;
+  aduanList[idx].nota=document.getElementById("modalNota").value;
+  localStorage.setItem("aduanList",JSON.stringify(aduanList));
+  renderTable();
+  bootstrap.Modal.getInstance(document.getElementById("updateModal")).hide();
+}
 
-    function bukaModal(id) {
-      const a = aduanList.find(x=>x.id===id);
-      currentID = id;
-      document.getElementById("detailID").innerText = a.id;
-      document.getElementById("detailNama").innerText = a.nama;
-      document.getElementById("detailAduan").innerText = a.teks;
-      document.getElementById("detailStatus").value = a.status;
-      document.getElementById("detailNota").value = a.nota;
-      document.getElementById("modalKemaskini").style.display="flex";
-    }
-
-    function tutupModal(){ document.getElementById("modalKemaskini").style.display="none"; }
-
-    function simpanKemaskini() {
-      const t = translations[lang]; const idx = aduanList.findIndex(x=>x.id===currentID);
-      aduanList[idx].status = document.getElementById("detailStatus").value;
-      aduanList[idx].nota = document.getElementById("detailNota").value;
-      localStorage.setItem("aduanList", JSON.stringify(aduanList));
-      paparJadual(); tutupModal(); alert(t.msgKemaskini);
-    }
-
-    function padamAduan() {
-      const t = translations[lang];
-      if(confirm("❓")) {
-        aduanList = aduanList.filter(x=>x.id!==currentID);
-        localStorage.setItem("aduanList", JSON.stringify(aduanList));
-        paparJadual(); tutupModal(); alert(t.msgPadam);
-      }
-    }
-
-    setLang("ms");
-  </script>
+function deleteAduan(){
+  if(confirm("Adakah anda pasti ingin padam aduan ini?")){
+    aduanList=aduanList.filter(a=>a.id!==selectedId);
+    localStorage.setItem("aduanList",JSON.stringify(aduanList));
+    renderTable();
+    bootstrap.Modal.getInstance(document.getElementById("updateModal")).hide();
+  }
+}
+</script>
 </body>
 </html>
+
 
 
