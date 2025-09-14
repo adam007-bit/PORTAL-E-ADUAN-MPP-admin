@@ -34,7 +34,9 @@
       <div class="mb-3">
         <label class="form-label">Status</label>
         <select id="modalStatus" class="form-select">
-          <option>Dalam Proses</option><option>Selesai</option><option>Ditolak</option>
+          <option>Dalam Proses</option>
+          <option>Selesai</option>
+          <option>Ditolak</option>
         </select>
       </div>
       <div class="mb-3">
@@ -132,6 +134,11 @@ async function deleteAduan(){
     bootstrap.Modal.getInstance(document.getElementById("updateModal")).hide();
   }
 }
+
+// Expose functions untuk inline onclick
+window.openModal = openModal;
+window.saveUpdate = saveUpdate;
+window.deleteAduan = deleteAduan;
 
 // Initial fetch
 fetchAduan();
