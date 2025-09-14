@@ -15,7 +15,7 @@
   <div class="card p-3">
     <table class="table table-striped">
       <thead><tr>
-        <th>ID</th><th>Nama</th><th>Aduan</th><th>Status</th><th>Tarikh</th><th>Tindakan</th>
+        <th>ID</th><th>Nama</th><th>Kelas</th><th>Aduan</th><th>Status</th><th>Tarikh</th><th>Tindakan</th>
       </tr></thead>
       <tbody id="aduanTable"></tbody>
     </table>
@@ -30,6 +30,7 @@
     <div class="modal-body">
       <p><strong>ID:</strong> <span id="modalId"></span></p>
       <p><strong>Nama:</strong> <span id="modalNama"></span></p>
+      <p><strong>Kelas:</strong> <span id="modalKelas"></span></p>
       <p><strong>Aduan:</strong> <span id="modalAduan"></span></p>
       <div class="mb-3">
         <label class="form-label">Status</label>
@@ -89,6 +90,7 @@ async function fetchAduan() {
       tbody.innerHTML += `<tr>
         <td>${docSnap.id}</td>
         <td>${a.nama}</td>
+        <td>${a.kelas || "-"}</td>
         <td>${a.aduan}</td>
         <td>${a.status}</td>
         <td>${a.tarikh}</td>
@@ -108,6 +110,7 @@ async function openModal(id){
   const data = docSnap.data();
   document.getElementById("modalId").innerText = id;
   document.getElementById("modalNama").innerText = data.nama;
+  document.getElementById("modalKelas").innerText = data.kelas || "-";
   document.getElementById("modalAduan").innerText = data.aduan;
   document.getElementById("modalStatus").value = data.status;
   document.getElementById("modalNota").value = data.nota;
