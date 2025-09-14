@@ -2,80 +2,99 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Admin e-Aduan</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #eef2f7; margin: 0; padding: 0; }
-    header { background: #800000; color: white; padding: 15px; text-align: center; }
-    .container { max-width: 900px; margin: 30px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    body { font-family: Arial, sans-serif; margin: 0; background: #eef2f7; }
+    header { background: #222; color: #fff; padding: 15px; text-align: center; }
+    footer { background: #444; color: #fff; text-align: center; padding: 10px; margin-top: 20px; }
+    .container { max-width: 1000px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #222; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    th { background: #800000; color: white; }
-    select { padding: 6px; border-radius: 5px; }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #333; color: white; }
+    select { padding: 6px; border-radius: 4px; }
+    .status-proses { color: #b58900; font-weight: bold; }
+    .status-selesai { color: green; font-weight: bold; }
+    .status-ditolak { color: red; font-weight: bold; }
+    .stats { display: flex; justify-content: space-around; margin-top: 20px; }
+    .card { background: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; width: 30%; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .card h3 { margin: 0; font-size: 24px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Portal Admin e-Aduan</h1>
-  </header>
 
-  <div class="container">
-    <h3>Senarai Aduan</h3>
-    <table id="aduanTable">
-      <thead>
-        <tr>
-          <th>Nama</th>
-          <th>Kelas</th>
-          <th>Aduan</th>
-          <th>Masa</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+<header>
+  <h1>Portal Admin e-Aduan</h1>
+</header>
+
+<div class="container">
+  <h2>Dashboard Aduan</h2>
+
+  <div class="stats">
+    <div class="card"><h3 id="total">0</h3><p>Jumlah Aduan</p></div>
+    <div class="card"><h3 id="proses">0</h3><p>Dalam Proses</p></div>
+    <div class="card"><h3 id="selesai">0</h3><p>Selesai</p></div>
   </div>
 
-  <script>
-    // Load data dari localStorage
-    function loadAduan(){
-      let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
-      const tbody = document.querySelector("#aduanTable tbody");
-      tbody.innerHTML = "";
+  <table id="adminTable">
+    <thead>
+      <tr>
+        <th>ID Aduan</th>
+        <th>Nama</th>
+        <th>Aduan</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
-      senarai.forEach((item, index) => {
-        const row = document.createElement("tr");
+<footer>
+  &copy; 2025 e-Aduan F6 | Panel Admin
+</footer>
 
-        row.innerHTML = `
-          <td>${item.nama}</td>
-          <td>${item.kelas}</td>
-          <td>${item.aduan}</td>
-          <td>${item.masa}</td>
+<script>
+  let aduanList = JSON.parse(localStorage.getItem("aduanList")) || [];
+
+  function renderAdminTable() {
+    const tbody = document.querySelector("#adminTable tbody");
+    tbody.innerHTML = "";
+    let proses = 0, selesai = 0;
+
+    aduanList.forEach((a, index) => {
+      if(a.status === "Dalam Proses") proses++;
+      if(a.status === "Selesai") selesai++;
+      let statusClass = a.status === "Dalam Proses" ? "status-proses" : 
+                        a.status === "Selesai" ? "status-selesai" : "status-ditolak";
+      tbody.innerHTML += `
+        <tr>
+          <td>${a.id}</td>
+          <td>${a.nama}</td>
+          <td>${a.aduan}</td>
           <td>
-            <select onchange="updateStatus(${index}, this.value)">
-              <option value="Dalam Proses" ${item.status==="Dalam Proses"?"selected":""}>Dalam Proses</option>
-              <option value="Selesai" ${item.status==="Selesai"?"selected":""}>Selesai</option>
-              <option value="Ditolak" ${item.status==="Ditolak"?"selected":""}>Ditolak</option>
+            <select onchange="updateStatus(${index}, this.value)" class="${statusClass}">
+              <option ${a.status==="Dalam Proses"?"selected":""}>Dalam Proses</option>
+              <option ${a.status==="Selesai"?"selected":""}>Selesai</option>
+              <option ${a.status==="Ditolak"?"selected":""}>Ditolak</option>
             </select>
           </td>
-        `;
+        </tr>`;
+    });
 
-        tbody.appendChild(row);
-      });
-    }
+    document.getElementById("total").innerText = aduanList.length;
+    document.getElementById("proses").innerText = proses;
+    document.getElementById("selesai").innerText = selesai;
+  }
 
-    // Update status dalam localStorage
-    function updateStatus(index, status){
-      let senarai = JSON.parse(localStorage.getItem("aduanPelajar")) || [];
-      senarai[index].status = status;
-      localStorage.setItem("aduanPelajar", JSON.stringify(senarai));
-      loadAduan(); // refresh table
-    }
+  function updateStatus(index, newStatus) {
+    aduanList[index].status = newStatus;
+    localStorage.setItem("aduanList", JSON.stringify(aduanList));
+    renderAdminTable();
+  }
 
-    // Mula-mula load data
-    loadAduan();
+  renderAdminTable();
+</script>
 
-    // Auto reload setiap 5s untuk sync bila buka tab lain
-    setInterval(loadAduan, 5000);
-  </script>
 </body>
 </html>
-
