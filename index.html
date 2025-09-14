@@ -13,7 +13,9 @@
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
     th { background: #333; color: white; }
-    select { padding: 6px; border-radius: 4px; }
+    select, button { padding: 6px; border-radius: 4px; cursor: pointer; }
+    button { background: red; color: white; border: none; }
+    button:hover { background: darkred; }
     .status-proses { color: #b58900; font-weight: bold; }
     .status-selesai { color: green; font-weight: bold; }
     .status-ditolak { color: red; font-weight: bold; }
@@ -44,6 +46,7 @@
         <th>Nama</th>
         <th>Aduan</th>
         <th>Status</th>
+        <th>Tindakan</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -79,6 +82,7 @@
               <option ${a.status==="Ditolak"?"selected":""}>Ditolak</option>
             </select>
           </td>
+          <td><button onclick="deleteAduan(${index})">Padam</button></td>
         </tr>`;
     });
 
@@ -93,8 +97,17 @@
     renderAdminTable();
   }
 
+  function deleteAduan(index) {
+    if(confirm("Adakah anda pasti mahu memadam aduan ini?")) {
+      aduanList.splice(index, 1);
+      localStorage.setItem("aduanList", JSON.stringify(aduanList));
+      renderAdminTable();
+    }
+  }
+
   renderAdminTable();
 </script>
 
 </body>
 </html>
+
