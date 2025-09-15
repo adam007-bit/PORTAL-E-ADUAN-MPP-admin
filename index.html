@@ -30,7 +30,6 @@
     <div class="modal-body">
       <p><strong>ID:</strong> <span id="modalId"></span></p>
       <p><strong>Nama:</strong> <span id="modalNama"></span></p>
-      <p><strong>Kelas:</strong> <span id="modalKelas"></span></p>
       <p><strong>Aduan:</strong> <span id="modalAduan"></span></p>
       <div class="mb-3">
         <label class="form-label">Status</label>
@@ -93,7 +92,7 @@ async function fetchAduan() {
         <td>${a.kelas || "-"}</td>
         <td>${a.aduan}</td>
         <td>${a.status}</td>
-        <td>${a.tarikh}</td>
+        <td>${a.tarikh && a.tarikh.toDate ? a.tarikh.toDate().toLocaleString() : a.tarikh}</td>
         <td><button class="btn btn-sm btn-warning" onclick="openModal('${docSnap.id}')">Kemaskini</button></td>
       </tr>`;
     }
@@ -110,7 +109,6 @@ async function openModal(id){
   const data = docSnap.data();
   document.getElementById("modalId").innerText = id;
   document.getElementById("modalNama").innerText = data.nama;
-  document.getElementById("modalKelas").innerText = data.kelas || "-";
   document.getElementById("modalAduan").innerText = data.aduan;
   document.getElementById("modalStatus").value = data.status;
   document.getElementById("modalNota").value = data.nota;
@@ -148,6 +146,7 @@ fetchAduan();
 </script>
 </body>
 </html>
+
 
 
 
